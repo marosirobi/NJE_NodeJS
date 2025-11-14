@@ -2,13 +2,14 @@
 
 <main>
     <h1>Város szerkesztése: <%= varos.nev %></h1>
-
+    
+    <h2 style="font-size: 1.2em; border-bottom: 1px solid #ccc;">Város adatai</h2>
     <form action="/admin/varos/szerkeszt/<%= varos.id %>" method="POST">
         <div>
             <label for="nev">Város neve:</label>
             <input type="text" id="nev" name="nev" value="<%= varos.nev %>" required>
         </div>
-
+        
         <div>
             <label for="megyeid">Megye:</label>
             <select id="megyeid" name="megyeid" required>
@@ -30,8 +31,61 @@
             <label for="megyeijogu">Megyei jogú város?</label>
         </div>
 
-        <button type="submit">Módosítások mentése</button>
+        <button type="submit">Város adatainak mentése</button>
     </form>
+
+    <hr style="margin: 30px 0;">
+
+    <h2>Népességi adatok (<%= varos.nev %>)</h2>
+    
+    <h3>Új adat felvitele</h3>
+    <form action="/admin/lelekszam/uj" method="POST">
+        <input type="hidden" name="varosid" value="<%= varos.id %>">
+        <div>
+            <label for="ev">Év:</label>
+            <input type="number" name="ev" id="ev" required min="1900" max="2100">
+        </div>
+        <div>
+            <label for="osszesen">Összesen (fő):</label>
+            <input type="number" name="osszesen" id="osszesen" required>
+        </div>
+        <div>
+            <label for="no">Nők száma (fő):</label>
+            <input type="number" name="no" id="no" required>
+        </div>
+        <button type="submit">Új népesség mentése</button>
+    </form>
+
+    <h3 style="margin-top: 20px;">Meglévő adatok</h3>
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Év</th>
+                <th>Összesen</th>
+                <th>Nők</th>
+                <th>Műveletek</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% lelekszamok.forEach(l => { %>
+            <tr>
+                <td><%= l.ev %></td>
+                <td><%= l.osszesen %> fő</td>
+                <td><%= l.no %> fő</td>
+                <td>
+                    <a href="/admin/lelekszam/szerkeszt/<%= l.varosid %>/<%= l.ev %>">Edit</a>
+                    <a href="/admin/lelekszam/torles/<%= l.varosid %>/<%= l.ev %>" 
+                       onclick="return confirm('Biztosan törli a(z) <%= l.ev %> évi adatot?');">
+                       Delete
+                    </a>
+                </td>
+            </tr>
+            <% }) %>
+            <% if (lelekszamok.length === 0) { %>
+                <tr><td colspan="4" style="text-align: center;">Ehhez a városhoz még nincs népességi adat rögzítve.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
 </main>
 
 <%- include('../../partials/footer') %>

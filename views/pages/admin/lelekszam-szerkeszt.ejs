@@ -1,0 +1,25 @@
+<%- include('../../partials/header') %>
+<main>
+    <h1>Népesség szerkesztése</h1>
+    <p>
+        Város: <strong><%= adat.varosNev %></strong><br>
+        Év: <strong><%= adat.ev %></strong> (Az év nem módosítható, mert kulcs)
+    </p>
+
+    <form action="/admin/lelekszam/szerkeszt/<%= adat.varosid %>/<%= adat.ev %>" method="POST">
+        <div>
+            <label for="osszesen">Összesen (fő):</label>
+            <input type="number" name="osszesen" id="osszesen" value="<%= adat.osszesen %>" required>
+        </div>
+        <div>
+            <label for="no">Nők száma (fő):</label>
+            <input type="number" name="no" id="no" value="<%= adat.no %>" required>
+        </div>
+        <button type="submit">Módosítás mentése</button>
+    </form>
+    
+    <a href="/admin/varos/szerkeszt/<%= adat.varosid %>" style="margin-top: 20px; display: inline-block;">
+        Vissza a város szerkesztéséhez
+    </a>
+</main>
+<%- include('../../partials/footer') %>

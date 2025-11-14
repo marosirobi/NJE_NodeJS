@@ -3,34 +3,156 @@
 <main>
     <h1>Városok, megyék és lélekszámuk</h1>
     <p>
-        Ez az oldal a 'varos', 'megye' és 'lelekszam' táblák  
-        összekapcsolásával (JOIN) jön létre,
-        teljesítve a feladat "Adatbázis menü"  követelményét.
+        Ez az oldal a 'varos', 'megye' és 'lelekszam' táblák 
+        összekapcsolásával (JOIN) jön létre.
     </p>
 
-    <table>
-        <thead>
+    <form action="/adatbazis-lista" method="GET" style="margin-bottom: 20px;">
+    
+    <label for="megye">Megye neve:</label>
+    <select name="megye" id="szuro-megye">
+        <option value="">-- Összes megye --</option>
+        <% megyeNevek.forEach(m => { %>
+            <option 
+                value="<%= m.nev %>"
+                <%= (typeof szures !== 'undefined' && szures.megye === m.nev) ? 'selected' : '' %>>
+                <%= m.nev %>
+            </option>
+        <% }) %>
+    </select>
+
+    <label for="varos">Város neve:</label>
+    <select name="varos" id="szuro-varos">
+        <option value="">-- Összes város --</option>
+        <% varosNevek.forEach(v => { %>
+            <option 
+                value="<%= v.nev %>"
+                <%= (typeof szures !== 'undefined' && szures.varos === v.nev) ? 'selected' : '' %>>
+                <%= v.nev %>
+            </option>
+        <% }) %>
+    </select>
+
+    <button type="submit">Szűrés</button>
+    <a href="/adatbazis-lista">Szűrés törlése</a>
+</form>
+<table>
+    <thead>
+        <tr>
+            <th>Város</th>
+            <th>Megye</th>
+            <th>Év</th>
+            <th>Összes lélekszám</th>
+            <th>Nők száma</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% if (varosAdatok.length === 0) { %>
             <tr>
-                <th>Város</th>
-                <th>Megye</th>
-                <th>Év</th>
-                <th>Összes lélekszám</th>
-                <th>Nők száma</th>
+                <td colspan="5" style="text-align: center;">A szűrés nem hozott eredményt.</td>
             </tr>
-        </thead>
-        <tbody>
+        <% } else { %>
             <% varosAdatok.forEach(adat => { %>
                 <tr>
                     <td><%= adat.varosNev %></td>
                     <td><%= adat.megyeNev %></td>
-                    <td><%= adat.ev %></td>
-                    <td><%= adat.osszesen %> fő</td>
-                    <td><%= adat.no %> fő</td>
+                    
+                    <td><%= adat.ev ? adat.ev : 'N/A' %></td>
+                    <td><%= adat.osszesen ? adat.osszesen + ' fő' : 'N/A' %></td>
+                    <td><%= adat.no ? adat.no + ' fő' : 'N/A' %></td>
                 </tr>
             <% }) %>
-        </tbody>
-    </table>
+        <% } %>
+    </tbody>
+</table>
 
 </main>
+
+<script>
+    // Változók a két legördülő menühöz
+    const megyeDropdown = document.getElementById('szuro-megye');
+    const varosDropdown = document.getElementById('szuro-varos');
+    let isUpdating = false; // Zár, hogy elkerüljük a végtelen frissítési ciklust
+
+    // 1. ESEMÉNY: Megye változik -> Város lista frissítése
+    megyeDropdown.addEventListener('change', async function() {
+        if (isUpdating) return;
+        isUpdating = true;
+        await updateVarosok(this.value); // Frissítjük a városlistát
+        varosDropdown.value = ""; // Töröljük a város választást
+        isUpdating = false;
+    });
+
+    // 2. ESEMÉNY: Város változik -> Megye beállítása
+    varosDropdown.addEventListener('change', async function() {
+        if (isUpdating) return;
+        isUpdating = true;
+
+        const varosNeve = this.value;
+        if (varosNeve === "") { // Ha "-- Összes --"-t választ, nem teszünk semmit
+            isUpdating = false;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/megye-by-varos?varos=${encodeURIComponent(varosNeve)}`);
+            const data = await response.json();
+            
+            if (data.megyeNev) {
+                megyeDropdown.value = data.megyeNev; // Beállítjuk a megyét
+                await updateVarosok(data.megyeNev); // Frissítjük a városlistát az adott megyére
+                varosDropdown.value = varosNeve; // Újra kiválasztjuk az eredeti várost
+            }
+        } catch (error) {
+            console.error('Hiba a megye lekérésekor:', error);
+        }
+        isUpdating = false;
+    });
+
+    // 3. FUNKCIÓ: Város lista frissítése API hívással
+    async function updateVarosok(megyeNeve) {
+        try {
+            const response = await fetch(`/api/varosok-by-megye?megye=${encodeURIComponent(megyeNeve)}`);
+            const varosok = await response.json();
+
+            // Jelenlegi kiválasztott város (ha van)
+            const jelenlegiVaros = varosDropdown.value;
+            
+            varosDropdown.innerHTML = '<option value="">-- Összes város --</option>'; 
+            
+            varosok.forEach(varos => {
+                const option = document.createElement('option');
+                option.value = varos.nev;
+                option.textContent = varos.nev;
+                varosDropdown.appendChild(option);
+            });
+
+            // Próbáljuk meg tartani a kiválasztást, ha a város még a listában van
+            if (varosok.find(v => v.nev === jelenlegiVaros)) {
+                varosDropdown.value = jelenlegiVaros;
+            }
+
+        } catch (error) {
+            console.error('Hiba a városok lekérésekor:', error);
+            varosDropdown.innerHTML = '<option value="">Hiba a betöltéskor</option>';
+        }
+    }
+
+    // 4. OLDAL BETÖLTÉSEKOR FUT: (Ez oldja meg a Request 2-t)
+    document.addEventListener('DOMContentLoaded', async function() {
+        const kezdetiMegye = megyeDropdown.value;
+        const kezdetiVaros = varosDropdown.value;
+
+        // Ha az oldal úgy töltődik be, hogy egy megye ki van választva,
+        // akkor frissítenünk kell a városlistát, hogy csak az ő városait mutassa.
+        if (kezdetiMegye !== "") {
+            isUpdating = true;
+            await updateVarosok(kezdetiMegye);
+            // Visszaállítjuk az eredetileg kiválasztott várost (ha volt)
+            varosDropdown.value = kezdetiVaros; 
+            isUpdating = false;
+        }
+    });
+</script>
 
 <%- include('../partials/footer') %>

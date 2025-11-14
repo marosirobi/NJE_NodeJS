@@ -102,18 +102,41 @@ app.get('/uzenetek', isLoggedIn, async (req, res) => {
 
 app.get('/admin/varosok', isAdmin, async (req, res) => {
     try {
-        // JOIN-oljuk a megye nevét a jobb olvashatóságért
-        const sqlQuery = `
+        // 1. MINDIG a teljes listát kérjük le
+        const [varosNevek] = await db.query("SELECT DISTINCT nev FROM varos ORDER BY nev");
+        const [megyeNevek] = await db.query("SELECT DISTINCT nev FROM megye ORDER BY nev");
+
+        const { varos, megye } = req.query;
+
+        let sqlQuery = `
             SELECT v.id, v.nev AS varosNev, m.nev AS megyeNev, v.megyeszekhely, v.megyeijogu 
             FROM varos v 
             LEFT JOIN megye m ON v.megyeid = m.id 
-            ORDER BY v.nev
         `;
-        const [rows] = await db.query(sqlQuery);
+
+        const whereClauses = [];
+        const params = [];
+        if (varos && varos !== "") {
+            whereClauses.push("v.nev = ?");
+            params.push(varos);
+        }
+        if (megye && megye !== "") {
+            whereClauses.push("m.nev = ?");
+            params.push(megye);
+        }
+        if (whereClauses.length > 0) {
+            sqlQuery += " WHERE " + whereClauses.join(" AND ");
+        }
+        sqlQuery += " ORDER BY v.nev";
+
+        const [rows] = await db.query(sqlQuery, params);
 
         res.render('pages/admin/varos-lista', {
             title: 'Admin - Városok',
-            varosok: rows
+            varosok: rows,
+            szures: req.query,
+            varosNevek: varosNevek, // TELJES lista
+            megyeNevek: megyeNevek  // TELJES lista
         });
 
     } catch (error) {
@@ -184,10 +207,12 @@ app.get('/admin/varos/torles/:id', isAdmin, async (req, res) => {
 
 app.get('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id } = req.params; // A város ID-je az URL-ből
 
+        // 1. Kell a megye lista (a város űrlaphoz)
         const [megyek] = await db.query("SELECT * FROM megye ORDER BY nev");
-
+        
+        // 2. Kell a szerkesztendő város adata
         const [varosok] = await db.query("SELECT * FROM varos WHERE id = ?", [id]);
 
         if (varosok.length === 0) {
@@ -195,10 +220,17 @@ app.get('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
             return res.redirect('/admin/varosok');
         }
 
+        // 3. ÚJ: Lekérdezzük a városhoz tartozó ÖSSZES népességi adatot
+        const [lelekszamAdatok] = await db.query(
+            "SELECT * FROM lelekszam WHERE varosid = ? ORDER BY ev DESC", 
+            [id]
+        );
+
         res.render('pages/admin/varos-szerkeszt', {
-            title: 'Város szerkesztése',
+            title: `Szerkesztés: ${varosok[0].nev}`,
             megyek: megyek,
-            varos: varosok[0]
+            varos: varosok[0], // Átadjuk a város adatait
+            lelekszamok: lelekszamAdatok // ÚJ: Átadjuk a népességi adatokat
         });
     } catch (error) {
         console.error('Hiba (Szerkesztés GET):', error);
@@ -354,7 +386,18 @@ app.post('/kapcsolat', async (req, res) => {
 
 app.get('/adatbazis-lista', async (req, res) => {
     try {
-        const sqlQuery = `
+        // 1. Listák lekérdezése a legördülő menükhöz
+        const [varosNevek] = await db.query("SELECT DISTINCT nev FROM varos ORDER BY nev");
+        const [megyeNevek] = await db.query("SELECT DISTINCT nev FROM megye ORDER BY nev");
+
+        // 2. Szűrő paraméterek beolvasása (pl. ?megye=Békés)
+        const { varos, megye } = req.query;
+
+        // 3. Alap SQL lekérdezés
+        // FONTOS: JOIN -> LEFT JOIN a 'lelekszam' táblánál!
+        // Ez biztosítja, hogy azok a városok is megjelenjenek,
+        // amelyekhez nincs népességi adat rendelve.
+        let sqlQuery = `
             SELECT 
                 v.nev AS varosNev,
                 m.nev AS megyeNev,
@@ -363,21 +406,177 @@ app.get('/adatbazis-lista', async (req, res) => {
                 l.osszesen
             FROM varos v
             JOIN megye m ON v.megyeid = m.id
-            JOIN lelekszam l ON v.id = l.varosid
-            ORDER BY v.nev, l.ev DESC;
-        `;
+            LEFT JOIN lelekszam l ON v.id = l.varosid 
+        `; // <-- ITT A LÉNYEG!
+        
+        // 4. WHERE feltételek dinamikus hozzáadása
+        const whereClauses = [];
+        const params = [];
 
-        const [rows] = await db.query(sqlQuery);
+        // Csak akkor szűrünk, ha a paraméter létezik ÉS nem üres ("")
+        if (varos && varos !== "") {
+            whereClauses.push("v.nev = ?");
+            params.push(varos);
+        }
+        if (megye && megye !== "") {
+            whereClauses.push("m.nev = ?");
+            params.push(megye);
+        }
 
+        // Ha van szűrés, hozzáadjuk a WHERE részt
+        if (whereClauses.length > 0) {
+            sqlQuery += " WHERE " + whereClauses.join(" AND ");
+        }
+
+        // 5. Rendezés
+        sqlQuery += " ORDER BY v.nev, l.ev DESC";
+        
+        // 6. Lekérdezés futtatása
+        const [rows] = await db.query(sqlQuery, params);
+
+        // 7. Oldal renderelése a kapott adatokkal
         res.render('pages/adatbazis-lista', {
             title: 'Városlista',
-            varosAdatok: rows
+            varosAdatok: rows,       // A táblázat adatai
+            szures: req.query,       // A kiválasztott szűrők (hogy emlékezzen)
+            varosNevek: varosNevek,  // A város legördülő lista tartalma
+            megyeNevek: megyeNevek   // A megye legördülő lista tartalma
         });
 
     } catch (error) {
-        console.error('Hiba a lekérdezés során:', error);
-        res.status(500).send('Hiba történt a szerveren.');
+        // Hiba esetén ne omoljon össze, csak írja ki
+        console.error('Hiba a /adatbazis-lista lekérdezés során:', error);
+        res.status(500).send('Hiba történt a szerveren az adatok lekérése közben.');
     }
+});
+
+app.get('/api/varosok-by-megye', async (req, res) => {
+    try {
+        const { megye } = req.query;
+        let sqlQuery = "";
+        let params = [];
+
+        if (megye && megye !== "") {
+            sqlQuery = `SELECT v.nev FROM varos v
+                        JOIN megye m ON v.megyeid = m.id
+                        WHERE m.nev = ? ORDER BY v.nev`;
+            params.push(megye);
+        } else {
+            // Ha nincs megye ("-- Összes --"), adjuk vissza az összes várost
+            sqlQuery = "SELECT DISTINCT nev FROM varos ORDER BY nev";
+        }
+        
+        const [varosok] = await db.query(sqlQuery, params);
+        res.json(varosok); // Visszaadjuk az eredményt JSON-ként
+    } catch (error) {
+        console.error('API hiba (varosok-by-megye):', error);
+        res.status(500).json({ error: 'Szerverhiba' });
+    }
+});
+
+// 2. API: Megye lekérdezése városnév alapján
+app.get('/api/megye-by-varos', async (req, res) => {
+    try {
+        const { varos } = req.query;
+        if (!varos || varos === "") {
+            return res.json({ megyeNev: "" });
+        }
+        
+        const sqlQuery = `SELECT m.nev AS megyeNev FROM megye m
+                          JOIN varos v ON v.megyeid = m.id
+                          WHERE v.nev = ?`;
+        const [rows] = await db.query(sqlQuery, [varos]);
+        
+        if (rows.length > 0) {
+            res.json({ megyeNev: rows[0].megyeNev });
+        } else {
+            res.json({ megyeNev: "" });
+        }
+    } catch (error) {
+        console.error('API hiba (megye-by-varos):', error);
+        res.status(500).json({ error: 'Szerverhiba' });
+    }
+});
+
+app.post('/admin/lelekszam/uj', isAdmin, async (req, res) => {
+    // A rejtett mezőből kapjuk a varosid-t
+    const { varosid, ev, osszesen, no } = req.body;
+    try {
+        const sqlQuery = "INSERT INTO lelekszam (varosid, ev, no, osszesen) VALUES (?, ?, ?, ?)";
+        await db.query(sqlQuery, [varosid, ev, no, osszesen]);
+        
+        req.flash('success', `${ev} évi népességi adat sikeresen hozzáadva.`);
+    } catch (error) {
+        console.error('Hiba (Új lélekszám POST):', error);
+        // Kezeljük, ha a kulcs (varosid, ev) már létezik
+        if (error.code === 'ER_DUP_ENTRY') {
+            req.flash('error', `A(z) ${ev} évhez már létezik adat ennél a városnál. Használd a szerkesztést.`);
+        } else {
+            req.flash('error', 'Hiba történt az adat mentése közben.');
+        }
+    }
+    // Visszairányítjuk az eredeti szerkesztő oldalra
+    res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+});
+
+app.get('/admin/lelekszam/torles/:varosid/:ev', isAdmin, async (req, res) => {
+    const { varosid, ev } = req.params;
+    try {
+        await db.query("DELETE FROM lelekszam WHERE varosid = ? AND ev = ?", [varosid, ev]);
+        req.flash('success', `${ev} évi adat sikeresen törölve.`);
+    } catch (error) {
+        console.error('Hiba (Lélekszám törlés):', error);
+        req.flash('error', 'Hiba történt az adat törlése közben.');
+    }
+    // Visszairányítás a fő szerkesztő oldalra
+    res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+});
+
+app.get('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => {
+    try {
+        const { varosid, ev } = req.params;
+
+        // Lekérdezzük a lélekszám adatot, ÉS a város nevét a szebb megjelenítéshez
+        const sqlQuery = `
+            SELECT l.*, v.nev AS varosNev 
+            FROM lelekszam l
+            JOIN varos v ON l.varosid = v.id
+            WHERE l.varosid = ? AND l.ev = ?
+        `;
+        const [rows] = await db.query(sqlQuery, [varosid, ev]);
+
+        if (rows.length === 0) {
+            req.flash('error', 'A keresett népességi adat nem található.');
+            return res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+        }
+
+        res.render('pages/admin/lelekszam-szerkeszt', {
+            title: 'Népesség szerkesztése',
+            adat: rows[0] // Átadjuk az 1 db rekordot
+        });
+        
+    } catch (error) {
+        console.error('Hiba (Lélekszám szerkesztés GET):', error);
+        req.flash('error', 'Szerverhiba történt.');
+        res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+    }
+});
+
+app.post('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => {
+    const { varosid, ev } = req.params;
+    const { osszesen, no } = req.body; // Az űrlapból jövő új adatok
+
+    try {
+        const sqlQuery = "UPDATE lelekszam SET osszesen = ?, no = ? WHERE varosid = ? AND ev = ?";
+        await db.query(sqlQuery, [osszesen, no, varosid, ev]);
+        
+        req.flash('success', `${ev} évi adat sikeresen módosítva.`);
+    } catch (error) {
+        console.error('Hiba (Lélekszám szerkesztés POST):', error);
+        req.flash('error', 'Hiba történt az adat módosítása közben.');
+    }
+    // Visszairányítjuk a fő szerkesztő oldalra
+    res.redirect(`/admin/varos/szerkeszt/${varosid}`);
 });
 
 

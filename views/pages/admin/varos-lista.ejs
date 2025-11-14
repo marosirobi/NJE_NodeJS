@@ -8,6 +8,33 @@
         Új város hozzáadása
     </a>
 
+    <form action="/admin/varosok" method="GET" style="margin: 20px 0;">
+    <label for="megye">Megye neve:</label>
+    <select name="megye" id="admin-szuro-megye">
+        <option value="">-- Összes megye --</option>
+        <% megyeNevek.forEach(m => { %>
+            <option value="<%= m.nev %>"
+                <%= (typeof szures !== 'undefined' && szures.megye === m.nev) ? 'selected' : '' %>>
+                <%= m.nev %>
+            </option>
+        <% }) %>
+    </select>
+
+    <label for="varos">Város neve:</label>
+    <select name="varos" id="admin-szuro-varos">
+        <option value="">-- Összes város --</option>
+        <% varosNevek.forEach(v => { %>
+            <option value="<%= v.nev %>"
+                <%= (typeof szures !== 'undefined' && szures.varos === v.nev) ? 'selected' : '' %>>
+                <%= v.nev %>
+            </option>
+        <% }) %>
+    </select>
+
+    <button type="submit">Szűrés</button>
+    <a href="/admin/varosok">Szűrés törlése</a>
+</form>
+
     <table border="1" style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr>
@@ -39,5 +66,71 @@
         </tbody>
     </table>
 </main>
+
+<script>
+    const adminMegyeDropdown = document.getElementById('admin-szuro-megye');
+    const adminVarosDropdown = document.getElementById('admin-szuro-varos');
+    let adminIsUpdating = false;
+
+    adminMegyeDropdown.addEventListener('change', async function() {
+        if (adminIsUpdating) return;
+        adminIsUpdating = true;
+        await adminUpdateVarosok(this.value);
+        adminVarosDropdown.value = "";
+        adminIsUpdating = false;
+    });
+
+    adminVarosDropdown.addEventListener('change', async function() {
+        if (adminIsUpdating) return;
+        adminIsUpdating = true;
+        const varosNeve = this.value;
+        if (varosNeve === "") {
+            adminIsUpdating = false;
+            return;
+        }
+        try {
+            const response = await fetch(`/api/megye-by-varos?varos=${encodeURIComponent(varosNeve)}`);
+            const data = await response.json();
+            if (data.megyeNev) {
+                adminMegyeDropdown.value = data.megyeNev;
+                await adminUpdateVarosok(data.megyeNev);
+                adminVarosDropdown.value = varosNeve;
+            }
+        } catch (error) { console.error('Hiba a megye lekérésekor:', error); }
+        adminIsUpdating = false;
+    });
+
+    async function adminUpdateVarosok(megyeNeve) {
+        try {
+            const response = await fetch(`/api/varosok-by-megye?megye=${encodeURIComponent(megyeNeve)}`);
+            const varosok = await response.json();
+            const jelenlegiVaros = adminVarosDropdown.value;
+            adminVarosDropdown.innerHTML = '<option value="">-- Összes város --</option>'; 
+            varosok.forEach(varos => {
+                const option = document.createElement('option');
+                option.value = varos.nev;
+                option.textContent = varos.nev;
+                adminVarosDropdown.appendChild(option);
+            });
+            if (varosok.find(v => v.nev === jelenlegiVaros)) {
+                adminVarosDropdown.value = jelenlegiVaros;
+            }
+        } catch (error) {
+            console.error('Hiba a városok lekérésekor:', error);
+            adminVarosDropdown.innerHTML = '<option value="">Hiba a betöltéskor</option>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        const kezdetiMegye = adminMegyeDropdown.value;
+        const kezdetiVaros = adminVarosDropdown.value;
+        if (kezdetiMegye !== "") {
+            adminIsUpdating = true;
+            await adminUpdateVarosok(kezdetiMegye);
+            adminVarosDropdown.value = kezdetiVaros; 
+            adminIsUpdating = false;
+        }
+    });
+</script>
 
 <%- include('../../partials/footer') %>
