@@ -1,0 +1,43 @@
+<%- include('../../partials/header') %>
+
+<main>
+    <h1>Admin - Városok Kezelése (CRUD)</h1>
+    <p>Itt lehet új várost felvinni, meglévőket módosítani vagy törölni.</p>
+
+    <a href="/admin/varos/uj" style="background: green; color: white; padding: 10px; text-decoration: none; margin-bottom: 15px; display: inline-block;">
+        Új város hozzáadása
+    </a>
+
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Város neve</th>
+                <th>Megye neve</th>
+                <th>Megyeszékhely?</th>
+                <th>Megyei jogú?</th>
+                <th>Műveletek</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% varosok.forEach(varos => { %>
+                <tr>
+                    <td><%= varos.id %></td>
+                    <td><%= varos.varosNev %></td>
+                    <td><%= varos.megyeNev %></td>
+                    <td><%= varos.megyeszekhely ? 'Igen' : 'Nem' %></td>
+                    <td><%= varos.megyeijogu ? 'Igen' : 'Nem' %></td>
+                    <td>
+                        <a href="/admin/varos/szerkeszt/<%= varos.id %>">Edit</a>
+                        <a href="/admin/varos/torles/<%= varos.id %>" 
+                           onclick="return confirm('Biztosan törli a(z) <%= varos.varosNev %> nevű várost? Ez a művelet nem vonható vissza!');">
+                           Delete
+                        </a>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</main>
+
+<%- include('../../partials/footer') %>

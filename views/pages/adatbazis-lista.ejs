@@ -1,0 +1,36 @@
+<%- include('../partials/header') %>
+
+<main>
+    <h1>Városok, megyék és lélekszámuk</h1>
+    <p>
+        Ez az oldal a 'varos', 'megye' és 'lelekszam' táblák  
+        összekapcsolásával (JOIN) jön létre,
+        teljesítve a feladat "Adatbázis menü"  követelményét.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Város</th>
+                <th>Megye</th>
+                <th>Év</th>
+                <th>Összes lélekszám</th>
+                <th>Nők száma</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% varosAdatok.forEach(adat => { %>
+                <tr>
+                    <td><%= adat.varosNev %></td>
+                    <td><%= adat.megyeNev %></td>
+                    <td><%= adat.ev %></td>
+                    <td><%= adat.osszesen %> fő</td>
+                    <td><%= adat.no %> fő</td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+</main>
+
+<%- include('../partials/footer') %>

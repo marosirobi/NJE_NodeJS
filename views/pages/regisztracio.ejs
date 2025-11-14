@@ -1,0 +1,33 @@
+<%- include('../partials/header') %>
+
+<main>
+    <h1>Regisztráció</h1>
+
+    <% if (messages.error) { %>
+        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+            <%= messages.error %>
+        </div>
+    <% } %>
+
+    <form action="/regisztracio" method="POST">
+        <div>
+            <label for="nev">Név:</label>
+            <input type="text" id="nev" name="nev" required>
+        </div>
+        <div>
+            <label for="email">Email cím:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="jelszo">Jelszó:</label>
+            <input type="password" id="jelszo" name="jelszo" required>
+        </div>
+         <div>
+            <label for="jelszo_megerosit">Jelszó megerősítése:</label>
+            <input type="password" id="jelszo_megerosit" name="jelszo_megerosit" required>
+        </div>
+        <button type="submit">Regisztráció</button>
+    </form>
+</main>
+
+<%- include('../partials/footer') %>

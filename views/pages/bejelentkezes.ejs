@@ -1,0 +1,30 @@
+<%- include('../partials/header') %>
+
+<main>
+    <h1>Bejelentkezés</h1>
+
+    <% if (messages.error) { %>
+        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+            <%= messages.error %>
+        </div>
+    <% } %>
+    <% if (messages.success) { %>
+        <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
+            <%= messages.success %>
+        </div>
+    <% } %>
+
+    <form action="/bejelentkezes" method="POST">
+        <div>
+            <label for="email">Email cím:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="jelszo">Jelszó:</label>
+            <input type="password" id="jelszo" name="jelszo" required>
+        </div>
+        <button type="submit">Bejelentkezés</button>
+    </form>
+</main>
+
+<%- include('../partials/footer') %>

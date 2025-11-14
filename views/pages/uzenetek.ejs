@@ -1,0 +1,34 @@
+<%- include('../partials/header') %>
+
+<main>
+    <h1>Beérkezett üzenetek</h1>
+    <p>Az alábbi üzenetek a kapcsolati űrlapon keresztül érkeztek, a legfrissebb elől.</p>
+
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Dátum</th>
+                <th>Név</th>
+                <th>Email</th>
+                <th>Üzenet</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (uzenetek.length === 0) { %>
+                <tr>
+                    <td colspan="4">Még nem érkezett üzenet.</td>
+                </tr>
+            <% } %>
+            <% uzenetek.forEach(msg => { %>
+                <tr>
+                    <td><%= new Date(msg.datum).toLocaleString('hu-HU') %></td>
+                    <td><%= msg.nev %></td>
+                    <td><%= msg.email %></td>
+                    <td><%= msg.uzenet %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</main>
+
+<%- include('../partials/footer') %>

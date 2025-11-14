@@ -1,16 +1,32 @@
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beadandó - <%= title %></title>
-    <link rel="stylesheet" href="/css/stilus.css"> 
-</head>
 <body>
+    <% if (messages.success) { %>
+        <div style="color: green; border: 1px solid green; padding: 10px; margin: 10px 0;">
+            <%= messages.success %>
+        </div>
+    <% } %>
+    <% if (messages.error) { %>
+        <div style="color: red; border: 1px solid red; padding: 10px; margin: 10px 0;">
+            <%= messages.error %>
+        </div>
+    <% } %>
+
     <nav>
         <ul>
             <li><a href="/">Főoldal</a></li>
-            <li><a href="/adatbazis">Adatbázis</a></li>
+            <li><a href="/adatbazis-lista">Városlista</a></li>
             <li><a href="/kapcsolat">Kapcsolat</a></li>
-            </ul>
+
+            <% if (user) { %>
+                <li><a href="/uzenetek">Üzenetek</a></li>
+
+                <% if (user.szerepkor === 'admin') { %>
+                    <li><a href="/admin/varosok">Admin (CRUD)</a></li>
+                <% } %>
+
+                <li><a href="/kijelentkezes">Kijelentkezés (<%= user.nev %>)</a></li>
+            <% } else { %>
+                <li><a href="/bejelentkezes">Bejelentkezés</a></li>
+                <li><a href="/regisztracio">Regisztráció</a></li>
+            <% } %>
+        </ul>
     </nav>

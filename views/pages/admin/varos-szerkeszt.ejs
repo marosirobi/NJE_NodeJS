@@ -1,0 +1,37 @@
+<%- include('../../partials/header') %>
+
+<main>
+    <h1>Város szerkesztése: <%= varos.nev %></h1>
+
+    <form action="/admin/varos/szerkeszt/<%= varos.id %>" method="POST">
+        <div>
+            <label for="nev">Város neve:</label>
+            <input type="text" id="nev" name="nev" value="<%= varos.nev %>" required>
+        </div>
+
+        <div>
+            <label for="megyeid">Megye:</label>
+            <select id="megyeid" name="megyeid" required>
+                <% megyek.forEach(megye => { %>
+                    <option value="<%= megye.id %>" <%= (megye.id == varos.megyeid) ? 'selected' : '' %>>
+                        <%= megye.nev %>
+                    </option>
+                <% }) %>
+            </select>
+        </div>
+
+        <div>
+            <input type="checkbox" id="megyeszekhely" name="megyeszekhely" value="1" <%= (varos.megyeszekhely) ? 'checked' : '' %>>
+            <label for="megyeszekhely">Megyeszékhely?</label>
+        </div>
+
+         <div>
+            <input type="checkbox" id="megyeijogu" name="megyeijogu" value="1" <%= (varos.megyeijogu) ? 'checked' : '' %>>
+            <label for="megyeijogu">Megyei jogú város?</label>
+        </div>
+
+        <button type="submit">Módosítások mentése</button>
+    </form>
+</main>
+
+<%- include('../../partials/footer') %>

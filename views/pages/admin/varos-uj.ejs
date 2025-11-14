@@ -1,0 +1,36 @@
+<%- include('../../partials/header') %>
+
+<main>
+    <h1>Új város felvitele</h1>
+
+    <form action="/admin/varos/uj" method="POST">
+        <div>
+            <label for="nev">Város neve:</label>
+            <input type="text" id="nev" name="nev" required>
+        </div>
+
+        <div>
+            <label for="megyeid">Megye:</label>
+            <select id="megyeid" name="megyeid" required>
+                <option value="">Válasszon megyét...</option>
+                <% megyek.forEach(megye => { %>
+                    <option value="<%= megye.id %>"><%= megye.nev %></option>
+                <% }) %>
+            </select>
+        </div>
+
+        <div>
+            <input type="checkbox" id="megyeszekhely" name="megyeszekhely" value="1">
+            <label for="megyeszekhely">Megyeszékhely?</label>
+        </div>
+
+         <div>
+            <input type="checkbox" id="megyeijogu" name="megyeijogu" value="1">
+            <label for="megyeijogu">Megyei jogú város?</label>
+        </div>
+
+        <button type="submit">Város létrehozása</button>
+    </form>
+</main>
+
+<%- include('../../partials/footer') %>
