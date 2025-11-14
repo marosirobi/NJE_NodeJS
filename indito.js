@@ -58,11 +58,38 @@ app.get('/', (req,res) =>{
 
 app.get('/uzenetek', isLoggedIn, async (req, res) => {
     try {
-        // Lekérdezés fordított időrendben [cite: 29]
-        const [rows] = await db.query("SELECT * FROM uzenetek ORDER BY datum DESC");
+        // A bejelentkezett felhasználó adatai a session-ből
+        const user = req.session.user; 
+        
+        let sqlQuery = "";
+        let params = []; // A lekérdezés paraméterei
+
+        if (user.szerepkor === 'admin') {
+            // 1. ADMIN ESETE: 
+            // Admin lát minden üzenetet, kivéve a más adminok által küldötteket.
+            // Ezért LEFT JOIN-t használunk a 'felhasznalok' táblával az email cím alapján.
+            // Ahol a felhasználó 'regisztralt' VAGY 'IS NULL' (azaz látogató küldte),
+            // azokat jelenítjük meg.
+            sqlQuery = `
+                SELECT u.* FROM uzenetek u
+                LEFT JOIN felhasznalok f ON u.email = f.email
+                WHERE f.szerepkor IS NULL OR f.szerepkor != 'admin'
+                ORDER BY u.datum DESC
+            `;
+            // Nincs szükség paraméterre
+            
+        } else {
+            // 2. SIMA FELHASZNÁLÓ ESETE:
+            // Csak a saját, email címe alapján elküldött üzeneteit látja.
+            sqlQuery = "SELECT * FROM uzenetek WHERE email = ? ORDER BY datum DESC";
+            params.push(user.email); // Paraméter: a felhasználó saját email címe
+        }
+
+        // 3. Lekérdezés futtatása
+        const [rows] = await db.query(sqlQuery, params);
 
         res.render('pages/uzenetek', {
-            title: 'Üzenetek',
+            title: 'Beérkezett üzenetek',
             uzenetek: rows
         });
 
