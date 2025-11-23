@@ -1,6 +1,86 @@
 <%- include('../partials/header') %>
+
 <main>
-    <h1>Üdvözlünk a Főoldalon!</h1>
-    <p>Ez a projekt a "Városok" adatbázist [cite: 50] dolgozza fel.</p>
+    <!-- Hero szekció -->
+    <section class="py-5 mb-4 bg-white rounded-3 shadow-sm">
+        <div class="container py-4">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    <h1 class="display-5 fw-bold mb-3">Magyar Városok adatbázisa</h1>
+                    <p class="lead mb-4">
+                        Webes alkalmazás, amely a magyar városok és Budapest kerületeinek adatait
+                        kezeli: megyék, városok és lakosságszám évről évre.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/adatbazis-lista" class="btn btn-primary btn-lg">
+                            Városok böngészése
+                        </a>
+                        <% if (!user) { %>
+                            <a href="/regisztracio" class="btn btn-outline-primary btn-lg">
+                                Regisztráció
+                            </a>
+                        <% } else { %>
+                            <a href="/uzenetek" class="btn btn-outline-primary btn-lg">
+                                Üzenetek
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="h5 fw-bold mb-3">Mit tud az alkalmazás?</h2>
+                            <ul class="list-unstyled mb-0">
+                                <li>• Városok listázása megyék szerint</li>
+                                <li>• Lakosságszám adatok évekre bontva</li>
+                                <li>• Regisztráció, bejelentkezés, üzenetküldés</li>
+                                <li>• Admin felület városok kezeléséhez (CRUD)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rövid infók -->
+    <section class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 fw-bold mb-2">Megyék</h3>
+                    <p class="mb-0">
+                        Az adatbázis tartalmazza Magyarország megyéit és Budapestet,
+                        amelyekhez a városok kapcsolódnak.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 fw-bold mb-2">Városok</h3>
+                    <p class="mb-0">
+                        Minden városhoz megadjuk, hogy megyeszékhely-e, illetve
+                        rendelkezik-e megyei joggal.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 fw-bold mb-2">Lakosságszám</h3>
+                    <p class="mb-0">
+                        A lakónépesség adatai év szerint követhetők, külön a nők
+                        számával és az összlélekszámmal.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
+
 <%- include('../partials/footer') %>
