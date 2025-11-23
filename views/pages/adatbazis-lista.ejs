@@ -1,158 +1,141 @@
 <%- include('../partials/header') %>
 
-<main>
-    <h1>Városok, megyék és lélekszámuk</h1>
-    <p>
-        Ez az oldal a 'varos', 'megye' és 'lelekszam' táblák 
-        összekapcsolásával (JOIN) jön létre.
-    </p>
+<main class="py-4">
 
-    <form action="/adatbazis-lista" method="GET" style="margin-bottom: 20px;">
-    
-    <label for="megye">Megye neve:</label>
-    <select name="megye" id="szuro-megye">
-        <option value="">-- Összes megye --</option>
-        <% megyeNevek.forEach(m => { %>
-            <option 
-                value="<%= m.nev %>"
-                <%= (typeof szures !== 'undefined' && szures.megye === m.nev) ? 'selected' : '' %>>
-                <%= m.nev %>
-            </option>
-        <% }) %>
-    </select>
+    <% 
+        // Statisztikák számítása
+        let varosDb = 0;
 
-    <label for="varos">Város neve:</label>
-    <select name="varos" id="szuro-varos">
-        <option value="">-- Összes város --</option>
-        <% varosNevek.forEach(v => { %>
-            <option 
-                value="<%= v.nev %>"
-                <%= (typeof szures !== 'undefined' && szures.varos === v.nev) ? 'selected' : '' %>>
-                <%= v.nev %>
-            </option>
-        <% }) %>
-    </select>
+        if (Array.isArray(varosAdatok) && varosAdatok.length > 0) {
+            const egyediVarosok = new Set();
+            varosAdatok.forEach(sor => {
+                egyediVarosok.add(sor.varosNev);
+            });
+            varosDb = egyediVarosok.size;
+        }
+    %>
 
-    <button type="submit">Szűrés</button>
-    <a href="/adatbazis-lista">Szűrés törlése</a>
-</form>
-<table>
-    <thead>
-        <tr>
-            <th>Város</th>
-            <th>Megye</th>
-            <th>Év</th>
-            <th>Összes lélekszám</th>
-            <th>Nők száma</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% if (varosAdatok.length === 0) { %>
-            <tr>
-                <td colspan="5" style="text-align: center;">A szűrés nem hozott eredményt.</td>
-            </tr>
-        <% } else { %>
-            <% varosAdatok.forEach(adat => { %>
-                <tr>
-                    <td><%= adat.varosNev %></td>
-                    <td><%= adat.megyeNev %></td>
-                    
-                    <td><%= adat.ev ? adat.ev : 'N/A' %></td>
-                    <td><%= adat.osszesen ? adat.osszesen + ' fő' : 'N/A' %></td>
-                    <td><%= adat.no ? adat.no + ' fő' : 'N/A' %></td>
-                </tr>
-            <% }) %>
-        <% } %>
-    </tbody>
-</table>
+    <!-- Fejléc -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Városlista</h1>
+            <p class="text-muted mb-0">
+                Városok, megyék és lakosságszám adatok.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-primary">
+                Összes város: <strong><%= varosDb %></strong>
+            </span>
+            <span class="badge bg-secondary">
+                Sorok: <strong><%= varosAdatok.length %></strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- SZŰRŐ ŰRLAP -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form class="row g-3 align-items-end" method="get" action="/adatbazis-lista">
+
+                <div class="col-md-4">
+                    <label class="form-label">Megye</label>
+                    <select name="megye" class="form-select">
+                        <option value="">-- Összes megye --</option>
+                        <% megyeNevek.forEach(m => { %>
+                            <option value="<%= m.nev %>" <%= szures.megye === m.nev ? 'selected' : '' %>>
+                                <%= m.nev %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Város</label>
+                    <select name="varos" class="form-select">
+                        <option value="">-- Összes város --</option>
+                        <% varosNevek.forEach(v => { %>
+                            <option value="<%= v.nev %>" <%= szures.varos === v.nev ? 'selected' : '' %>>
+                                <%= v.nev %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button class="btn btn-primary w-100">Szűrés</button>
+                    <a href="/adatbazis-lista" class="btn btn-outline-secondary">Törlés</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Egyszerű keresés -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <label class="form-label">Keresés</label>
+            <input type="text" id="search" class="form-control" placeholder="Pl.: Budapest, Baranya, 2020, 150000...">
+            <small class="text-muted">A táblázat minden oszlopára keres.</small>
+        </div>
+    </div>
+
+    <!-- Adattábla -->
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <% if (varosAdatok.length === 0) { %>
+
+                <p class="m-3 text-muted">Nincs megjeleníthető adat.</p>
+
+            <% } else { %>
+
+                <table class="table table-hover align-middle mb-0" id="varos-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Város</th>
+                            <th>Megye</th>
+                            <th>Év</th>
+                            <th class="text-end">Nők száma</th>
+                            <th class="text-end">Összlélekszám</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <% varosAdatok.forEach((sor, i) => { %>
+                            <tr>
+                                <td><%= i + 1 %></td>
+                                <td><%= sor.varosNev %></td>
+                                <td><%= sor.megyeNev %></td>
+                                <td><%= sor.ev || '-' %></td>
+                                <td class="text-end"><%= sor.no != null ? sor.no.toLocaleString('hu-HU') : '-' %></td>
+                                <td class="text-end"><%= sor.osszesen != null ? sor.osszesen.toLocaleString('hu-HU') : '-' %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+
+            <% } %>
+        </div>
+    </div>
 
 </main>
 
 <script>
-    // Változók a két legördülő menühöz
-    const megyeDropdown = document.getElementById('szuro-megye');
-    const varosDropdown = document.getElementById('szuro-varos');
-    let isUpdating = false; // Zár, hogy elkerüljük a végtelen frissítési ciklust
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("search");
+    const rows = document.querySelectorAll("#varos-table tbody tr");
 
-    // 1. ESEMÉNY: Megye változik -> Város lista frissítése
-    megyeDropdown.addEventListener('change', async function() {
-        if (isUpdating) return;
-        isUpdating = true;
-        await updateVarosok(this.value); // Frissítjük a városlistát
-        varosDropdown.value = ""; // Töröljük a város választást
-        isUpdating = false;
+    if (!input) return;
+
+    input.addEventListener("input", function () {
+        const q = this.value.toLowerCase();
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+        });
     });
-
-    // 2. ESEMÉNY: Város változik -> Megye beállítása
-    varosDropdown.addEventListener('change', async function() {
-        if (isUpdating) return;
-        isUpdating = true;
-
-        const varosNeve = this.value;
-        if (varosNeve === "") { // Ha "-- Összes --"-t választ, nem teszünk semmit
-            isUpdating = false;
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/megye-by-varos?varos=${encodeURIComponent(varosNeve)}`);
-            const data = await response.json();
-            
-            if (data.megyeNev) {
-                megyeDropdown.value = data.megyeNev; // Beállítjuk a megyét
-                await updateVarosok(data.megyeNev); // Frissítjük a városlistát az adott megyére
-                varosDropdown.value = varosNeve; // Újra kiválasztjuk az eredeti várost
-            }
-        } catch (error) {
-            console.error('Hiba a megye lekérésekor:', error);
-        }
-        isUpdating = false;
-    });
-
-    // 3. FUNKCIÓ: Város lista frissítése API hívással
-    async function updateVarosok(megyeNeve) {
-        try {
-            const response = await fetch(`/api/varosok-by-megye?megye=${encodeURIComponent(megyeNeve)}`);
-            const varosok = await response.json();
-
-            // Jelenlegi kiválasztott város (ha van)
-            const jelenlegiVaros = varosDropdown.value;
-            
-            varosDropdown.innerHTML = '<option value="">-- Összes város --</option>'; 
-            
-            varosok.forEach(varos => {
-                const option = document.createElement('option');
-                option.value = varos.nev;
-                option.textContent = varos.nev;
-                varosDropdown.appendChild(option);
-            });
-
-            // Próbáljuk meg tartani a kiválasztást, ha a város még a listában van
-            if (varosok.find(v => v.nev === jelenlegiVaros)) {
-                varosDropdown.value = jelenlegiVaros;
-            }
-
-        } catch (error) {
-            console.error('Hiba a városok lekérésekor:', error);
-            varosDropdown.innerHTML = '<option value="">Hiba a betöltéskor</option>';
-        }
-    }
-
-    // 4. OLDAL BETÖLTÉSEKOR FUT: (Ez oldja meg a Request 2-t)
-    document.addEventListener('DOMContentLoaded', async function() {
-        const kezdetiMegye = megyeDropdown.value;
-        const kezdetiVaros = varosDropdown.value;
-
-        // Ha az oldal úgy töltődik be, hogy egy megye ki van választva,
-        // akkor frissítenünk kell a városlistát, hogy csak az ő városait mutassa.
-        if (kezdetiMegye !== "") {
-            isUpdating = true;
-            await updateVarosok(kezdetiMegye);
-            // Visszaállítjuk az eredetileg kiválasztott várost (ha volt)
-            varosDropdown.value = kezdetiVaros; 
-            isUpdating = false;
-        }
-    });
+});
 </script>
 
 <%- include('../partials/footer') %>
