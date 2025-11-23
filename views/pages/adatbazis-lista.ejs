@@ -8,9 +8,7 @@
 
         if (Array.isArray(varosAdatok) && varosAdatok.length > 0) {
             const egyediVarosok = new Set();
-            varosAdatok.forEach(sor => {
-                egyediVarosok.add(sor.varosNev);
-            });
+            varosAdatok.forEach(sor => egyediVarosok.add(sor.varosNev));
             varosDb = egyediVarosok.size;
         }
     %>
@@ -34,14 +32,14 @@
         </div>
     </div>
 
-    <!-- SZŰRŐ ŰRLAP -->
+    <!-- Szűrés (szerver oldali) -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form class="row g-3 align-items-end" method="get" action="/adatbazis-lista">
 
                 <div class="col-md-4">
                     <label class="form-label">Megye</label>
-                    <select name="megye" class="form-select">
+                    <select name="megye" id="megyeSelect" class="form-select">
                         <option value="">-- Összes megye --</option>
                         <% megyeNevek.forEach(m => { %>
                             <option value="<%= m.nev %>" <%= szures.megye === m.nev ? 'selected' : '' %>>
@@ -53,7 +51,7 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Város</label>
-                    <select name="varos" class="form-select">
+                    <select name="varos" id="varosSelect" class="form-select">
                         <option value="">-- Összes város --</option>
                         <% varosNevek.forEach(v => { %>
                             <option value="<%= v.nev %>" <%= szures.varos === v.nev ? 'selected' : '' %>>
@@ -72,19 +70,21 @@
         </div>
     </div>
 
-    <!-- Egyszerű keresés -->
+    <!-- Keresés (kliens oldali, optimalizált) -->
     <div class="card shadow-sm mb-3">
         <div class="card-body">
             <label class="form-label">Keresés</label>
             <input type="text" id="search" class="form-control" placeholder="Pl.: Budapest, Baranya, 2020, 150000...">
-            <small class="text-muted">A táblázat minden oszlopára keres.</small>
+            <small class="text-muted">
+                A táblázat minden oszlopára keres (kisebb listáknál). Nagy adatbázisnál automatikusan letiltásra kerül.
+            </small>
         </div>
     </div>
 
-    <!-- Adattábla -->
+    <!-- Táblázat -->
     <div class="card shadow-sm">
         <div class="table-responsive">
-            <% if (varosAdatok.length === 0) { %>
+            <% if (!varosAdatok || varosAdatok.length === 0) { %>
 
                 <p class="m-3 text-muted">Nincs megjeleníthető adat.</p>
 
@@ -109,8 +109,12 @@
                                 <td><%= sor.varosNev %></td>
                                 <td><%= sor.megyeNev %></td>
                                 <td><%= sor.ev || '-' %></td>
-                                <td class="text-end"><%= sor.no != null ? sor.no.toLocaleString('hu-HU') : '-' %></td>
-                                <td class="text-end"><%= sor.osszesen != null ? sor.osszesen.toLocaleString('hu-HU') : '-' %></td>
+                                <td class="text-end">
+                                    <%= sor.no != null ? sor.no.toLocaleString('hu-HU') : '-' %>
+                                </td>
+                                <td class="text-end">
+                                    <%= sor.osszesen != null ? sor.osszesen.toLocaleString('hu-HU') : '-' %>
+                                </td>
                             </tr>
                         <% }) %>
                     </tbody>
@@ -125,15 +129,81 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("search");
-    const rows = document.querySelectorAll("#varos-table tbody tr");
+    const tbody = document.querySelector("#varos-table tbody");
+    const megyeSelect = document.getElementById("megyeSelect");
+    const varosSelect = document.getElementById("varosSelect");
 
-    if (!input) return;
+    // ---------- MEGYE -> VÁROS DINAMIKUS SZŰRÉS (API VAL) ----------
+
+    async function frissitVarosLista(megyeNev, kijeloltVaros) {
+        try {
+            // API hívás: /api/varosok-by-megye?megye=...
+            const url = megyeNev ? `/api/varosok-by-megye?megye=${encodeURIComponent(megyeNev)}` 
+                                 : '/api/varosok-by-megye';
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const varosok = await res.json();
+
+            // Város select újraépítése
+            varosSelect.innerHTML = '<option value="">-- Összes város --</option>';
+            varosok.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.nev;
+                opt.textContent = v.nev;
+                varosSelect.appendChild(opt);
+            });
+
+            if (kijeloltVaros) {
+                varosSelect.value = kijeloltVaros;
+            }
+        } catch (err) {
+            console.error('Hiba a városlista frissítésekor:', err);
+        }
+    }
+
+    if (megyeSelect && varosSelect) {
+        const kezdetiMegye = megyeSelect.value;
+        const kezdetiVaros = varosSelect.value;
+
+        // Oldal betöltéskor, ha már ki van választva megye, szűrt városlista töltése
+        if (kezdetiMegye) {
+            frissitVarosLista(kezdetiMegye, kezdetiVaros);
+        }
+
+        // Ha megye változik, frissítjük a város listát, és töröljük az aktuális választást
+        megyeSelect.addEventListener("change", () => {
+            const ujMegye = megyeSelect.value;
+            frissitVarosLista(ujMegye, "");
+        });
+    }
+
+    // ---------- KLIENS OLDALI KERESÉS (OPTIMALIZÁLVA) ----------
+
+    if (!input || !tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const MAX_ROWS_FOR_CLIENT_SEARCH = 3000;
+
+    // Ha túl sok sor van, kikapcsoljuk a keresőt (fagyás ellen)
+    if (rows.length > MAX_ROWS_FOR_CLIENT_SEARCH) {
+        input.value = "";
+        input.placeholder = "Túl sok sor az azonnali kereséshez – használd a megye/város szűrőket.";
+        input.disabled = true;
+        return;
+    }
+
+    let timer = null;
 
     input.addEventListener("input", function () {
         const q = this.value.toLowerCase();
-        rows.forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
-        });
+
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(q) ? "" : "none";
+            });
+        }, 200);
     });
 });
 </script>
