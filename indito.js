@@ -369,6 +369,7 @@ app.get('/kapcsolat', (req, res) => {
     });
 });
 
+
 app.post('/kapcsolat', async (req, res) => {
     const { nev, email, uzenet } = req.body;
 
@@ -383,6 +384,7 @@ app.post('/kapcsolat', async (req, res) => {
         res.status(500).send('Hiba történt a szerveren.');
     }
 });
+
 
 app.get('/adatbazis-lista', async (req, res) => {
     try {
@@ -449,6 +451,7 @@ app.get('/adatbazis-lista', async (req, res) => {
         res.status(500).send('Hiba történt a szerveren az adatok lekérése közben.');
     }
 });
+
 
 app.get('/api/varosok-by-megye', async (req, res) => {
     try {
@@ -579,8 +582,9 @@ app.post('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) =>
     res.redirect(`/admin/varos/szerkeszt/${varosid}`);
 });
 
-
 app.listen(port, () =>{
     console.log(`Szerver elinditva http://localhost:${port} cimen.`);
 });
+
+
 

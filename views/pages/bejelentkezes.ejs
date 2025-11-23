@@ -1,30 +1,41 @@
 <%- include('../partials/header') %>
 
-<main>
-    <h1>Bejelentkezés</h1>
+<main class="py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h4 fw-bold mb-3 text-center">Bejelentkezés</h1>
+                    <p class="text-muted text-center mb-4">
+                        Jelentkezzen be, hogy elérje az üzeneteket és az admin funkciókat.
+                    </p>
 
-    <% if (messages.error) { %>
-        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
-            <%= messages.error %>
-        </div>
-    <% } %>
-    <% if (messages.success) { %>
-        <div style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;">
-            <%= messages.success %>
-        </div>
-    <% } %>
+                    <form method="post" action="/bejelentkezes">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email cím</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
 
-    <form action="/bejelentkezes" method="POST">
-        <div>
-            <label for="email">Email cím:</label>
-            <input type="email" id="email" name="email" required>
+                        <div class="mb-3">
+                            <label for="jelszo" class="form-label">Jelszó</label>
+                            <input type="password" class="form-control" id="jelszo" name="jelszo" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            Bejelentkezés
+                        </button>
+
+                        <div class="text-center">
+                            <small class="text-muted">
+                                Még nincs fiókja?
+                                <a href="/regisztracio">Regisztráció</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="jelszo">Jelszó:</label>
-            <input type="password" id="jelszo" name="jelszo" required>
-        </div>
-        <button type="submit">Bejelentkezés</button>
-    </form>
+    </div>
 </main>
 
 <%- include('../partials/footer') %>

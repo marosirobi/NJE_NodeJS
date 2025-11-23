@@ -1,6 +1,178 @@
 <%- include('../partials/header') %>
+
 <main>
-    <h1>Üdvözlünk a Főoldalon!</h1>
-    <p>Ez a projekt a "Városok" adatbázist [cite: 50] dolgozza fel.</p>
+
+    <!-- === HERO / LANDING SECTION – nagy háttérkép + overlay === -->
+    <section class="hero-section position-relative text-white">
+        <div class="hero-overlay"></div>
+        <div class="container py-5 position-relative">
+            <div class="row align-items-center py-5">
+                <div class="col-lg-7">
+                    <h1 class="display-3 fw-bold mb-3 animate-fade-in text-dark">
+                        Magyar Városok Portál
+                    </h1>
+                    <p class="lead mb-4 animate-fade-in-delayed text-dark">
+                        Fedezd fel Magyarország városait, megyéit és lakossági adatait
+                        egy modern, interaktív és professzionális weboldalon.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-3 animate-fade-in-delayed2">
+                        <a href="/adatbazis-lista" class="btn btn-light btn-lg fw-bold px-4">
+                            Városok böngészése
+                        </a>
+
+                        <% if (!user) { %>
+                            <a href="/regisztracio" class="btn btn-outline-light btn-lg fw-bold px-4">
+                                Regisztráció
+                            </a>
+                        <% } else { %>
+                            <a href="/uzenetek" class="btn btn-outline-light btn-lg fw-bold px-4">
+                                Üzenetek
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 text-center mt-5 mt-lg-0 animate-float">
+                    <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png"
+                         class="img-fluid hero-icon" alt="Város ikon">
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- === RÓLUNK – modern, két kártyás, ikonokkal === -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5 display-6">Kik vagyunk?</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-lg border-0 h-100 hover-raise">
+                        <div class="card-body p-4">
+                            <h3 class="h4 fw-bold mb-3">
+                                <i class="bi bi-building me-2 text-primary"></i>
+                                Városok.hu – Oktatási projektcég
+                            </h3>
+                            <p>
+                                A <strong>Városok.hu</strong> egy oktatási célú rendszer,
+                                amely modern webes technológiákkal mutatja be
+                                Magyarország települési struktúráját.
+                            </p>
+                            <p class="mb-0">
+                                Célunk egy professzionális, reszponzív és esztétikus
+                                felület bemutatása, ahol könnyen böngészhetők a megyék,
+                                városok, kerületek és a demográfiai adatok.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow-lg border-0 h-100 hover-raise">
+                        <div class="card-body p-4">
+                            <h3 class="h4 fw-bold mb-3">
+                                <i class="bi bi-bullseye me-2 text-primary"></i>
+                                Küldetésünk
+                            </h3>
+                            <p>
+                                A projekt célja, hogy egy valósághű példán keresztül
+                                mutassa be, hogyan lehet Node.js + Express + MySQL
+                                segítségével professzionális webalkalmazást építeni.
+                            </p>
+                            <p class="mb-0">
+                                A rendszer támogatja az adatkezelést, felhasználókezelést,
+                                jogosultságot és modern UI-t – minden beadandóhoz szükséges
+                                elemmel együtt.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- === FŐ FUNKCIÓK – fancy kártyák, ikonokkal === -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5 display-6">Mit kínál a rendszer?</h2>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card text-center shadow-lg border-0 h-100 hover-raise">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-3">
+                                <i class="bi bi-map fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-2">Megyék</h4>
+                            <p class="mb-0">
+                                Magyarország 19 megyéje + Budapest egyetlen helyen,
+                                áttekinthető módon rendszerezve.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card text-center shadow-lg border-0 h-100 hover-raise">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-3">
+                                <i class="bi bi-building-check fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-2">Városok</h4>
+                            <p class="mb-0">
+                                Minden város részletes adatokkal: kerület, megyeszékhely
+                                státusz, megyei jog – teljes adatbázisban.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card text-center shadow-lg border-0 h-100 hover-raise">
+                        <div class="card-body p-4">
+                            <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-3">
+                                <i class="bi bi-people fs-3"></i>
+                            </div>
+                            <h4 class="fw-bold mb-2">Lakosságszám</h4>
+                            <p class="mb-0">
+                                Évenkénti demográfiai adatok: összlélekszám és nők száma,
+                                grafikonokhoz és statisztikákhoz ideális.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- === Kapcsolat CTA (call-to-action) === -->
+    <section class="py-5">
+        <div class="container">
+            <div class="card shadow-lg border-0 p-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 bg-primary text-white">
+                <div>
+                    <h3 class="fw-bold mb-2">Kérdése van?</h3>
+                    <p class="mb-0">
+                        Vegye fel velünk a kapcsolatot, vagy regisztráljon és írjon üzenetet a rendszerben.
+                    </p>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a href="/kapcsolat" class="btn btn-light fw-bold px-4">Kapcsolat</a>
+
+                    <% if (!user) { %>
+                        <a href="/regisztracio" class="btn btn-outline-light fw-bold px-4">Regisztráció</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </main>
+
 <%- include('../partials/footer') %>

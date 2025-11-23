@@ -1,36 +1,39 @@
 <%- include('../partials/header') %>
 
-<main>
-    <h1>Kapcsolat</h1>
-    <p>Küldjön nekünk üzenetet! Adminisztrátoraink hamarosan válaszolnak.</p>
+<main class="py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h3 fw-bold mb-3">Kapcsolat</h1>
+                    <p class="text-muted mb-4">
+                        Küldjön nekünk üzenetet! Adminisztrátoraink hamarosan válaszolnak.
+                    </p>
 
-    <form action="/kapcsolat" method="POST">
-    <div>
-        <label for="nev">Név:</label>
-        <input 
-            type="text" 
-            id="nev" 
-            name="nev" 
-            value="<%= user ? user.nev : '' %>"
-            <%= user ? 'readonly' : '' %>
-            required>
+                    <form method="post" action="/kapcsolat">
+                        <div class="mb-3">
+                            <label for="nev" class="form-label">Név</label>
+                            <input type="text" class="form-control" id="nev" name="nev" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email cím</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="uzenet" class="form-label">Üzenet</label>
+                            <textarea class="form-control" id="uzenet" name="uzenet" rows="5" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Üzenet elküldése
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div>
-        <label for="email">Email cím:</label>
-        <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            value="<%= user ? user.email : '' %>"
-            <%= user ? 'readonly' : '' %>
-            required>
-    </div>
-    <div>
-        <label for="uzenet">Üzenet:</label>
-        <textarea id="uzenet" name="uzenet" rows="5" required></textarea>
-    </div>
-    <button type="submit">Üzenet elküldése</button>
-</form>
 </main>
 
 <%- include('../partials/footer') %>
