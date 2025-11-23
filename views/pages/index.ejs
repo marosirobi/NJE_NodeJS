@@ -17,16 +17,16 @@
                     </p>
 
                     <div class="d-flex flex-wrap gap-3 animate-fade-in-delayed2">
-                        <a href="/adatbazis-lista" class="btn btn-light btn-lg fw-bold px-4">
+                        <a href="<%= base_path %>/adatbazis-lista" class="btn btn-light btn-lg fw-bold px-4">
                             Városok böngészése
                         </a>
 
                         <% if (!user) { %>
-                            <a href="/regisztracio" class="btn btn-outline-light btn-lg fw-bold px-4">
+                            <a href="<%= base_path %>/regisztracio" class="btn btn-outline btn-lg fw-bold px-4 text-dark">
                                 Regisztráció
                             </a>
                         <% } else { %>
-                            <a href="/uzenetek" class="btn btn-outline-light btn-lg fw-bold px-4">
+                            <a href="<%= base_path %>/uzenetek" class="btn btn-outline-light btn-lg fw-bold px-4 text-dark">
                                 Üzenetek
                             </a>
                         <% } %>
@@ -163,10 +163,10 @@
                 </div>
 
                 <div class="d-flex gap-3">
-                    <a href="/kapcsolat" class="btn btn-light fw-bold px-4">Kapcsolat</a>
+                    <a href="<%= base_path %>/kapcsolat" class="btn btn-light fw-bold px-4">Kapcsolat</a>
 
                     <% if (!user) { %>
-                        <a href="/regisztracio" class="btn btn-outline-light fw-bold px-4">Regisztráció</a>
+                        <a href="<%= base_path %>/regisztracio" class="btn btn-outline-light fw-bold px-4">Regisztráció</a>
                     <% } %>
                 </div>
             </div>

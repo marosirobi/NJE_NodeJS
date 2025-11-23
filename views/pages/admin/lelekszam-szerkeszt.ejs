@@ -1,25 +1,42 @@
 <%- include('../../partials/header') %>
-<main>
-    <h1>Népesség szerkesztése</h1>
-    <p>
-        Város: <strong><%= adat.varosNev %></strong><br>
-        Év: <strong><%= adat.ev %></strong> (Az év nem módosítható, mert kulcs)
-    </p>
 
-    <form action="/admin/lelekszam/szerkeszt/<%= adat.varosid %>/<%= adat.ev %>" method="POST">
-        <div>
-            <label for="osszesen">Összesen (fő):</label>
-            <input type="number" name="osszesen" id="osszesen" value="<%= adat.osszesen %>" required>
+<main class="py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h5 fw-bold mb-3">Népesség szerkesztése</h1>
+                    <p class="mb-3">
+                        Város: <strong><%= adat.varosNev %></strong><br>
+                        Év: <strong><%= adat.ev %></strong>
+                        <br>
+                        <small class="text-muted">Az év nem módosítható, mert kulcs.</small>
+                    </p>
+
+                    <form action="<%= base_path %>/admin/lelekszam/szerkeszt/<%= adat.varosid %>/<%= adat.ev %>" method="POST" class="vstack gap-3">
+                        <div>
+                            <label for="osszesen" class="form-label">Összesen (fő)</label>
+                            <input type="number" name="osszesen" id="osszesen" value="<%= adat.osszesen %>" class="form-control" required>
+                        </div>
+
+                        <div>
+                            <label for="no" class="form-label">Nők száma (fő)</label>
+                            <input type="number" name="no" id="no" value="<%= adat.no %>" class="form-control" required>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <a href="<%= base_path %>/admin/varos/szerkeszt/<%= adat.varosid %>" class="btn btn-outline-secondary">
+                                Vissza a város szerkesztéséhez
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Módosítás mentése
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="no">Nők száma (fő):</label>
-            <input type="number" name="no" id="no" value="<%= adat.no %>" required>
-        </div>
-        <button type="submit">Módosítás mentése</button>
-    </form>
-    
-    <a href="/admin/varos/szerkeszt/<%= adat.varosid %>" style="margin-top: 20px; display: inline-block;">
-        Vissza a város szerkesztéséhez
-    </a>
+    </div>
 </main>
+
 <%- include('../../partials/footer') %>

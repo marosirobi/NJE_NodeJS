@@ -35,7 +35,7 @@
     <!-- Szűrés (szerver oldali) -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form class="row g-3 align-items-end" method="get" action="/adatbazis-lista">
+            <form class="row g-3 align-items-end" method="get" action="<%= base_path %>/adatbazis-lista">
 
                 <div class="col-md-4">
                     <label class="form-label">Megye</label>
@@ -63,7 +63,7 @@
 
                 <div class="col-md-4 d-flex gap-2">
                     <button class="btn btn-primary w-100">Szűrés</button>
-                    <a href="/adatbazis-lista" class="btn btn-outline-secondary">Törlés</a>
+                    <a href="<%= base_path %>/adatbazis-lista" class="btn btn-outline-secondary">Törlés</a>
                 </div>
 
             </form>
