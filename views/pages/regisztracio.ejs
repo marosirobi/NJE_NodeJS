@@ -1,33 +1,51 @@
 <%- include('../partials/header') %>
 
-<main>
-    <h1>Regisztráció</h1>
+<main class="py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h4 fw-bold mb-3 text-center">Regisztráció</h1>
+                    <p class="text-muted text-center mb-4">
+                        Hozzon létre fiókot, hogy üzeneteket küldhessen és elérje a rendszer funkcióit.
+                    </p>
 
-    <% if (messages.error) { %>
-        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
-            <%= messages.error %>
-        </div>
-    <% } %>
+                    <form method="post" action="/regisztracio">
+                        <div class="mb-3">
+                            <label for="nev" class="form-label">Név</label>
+                            <input type="text" class="form-control" id="nev" name="nev" required>
+                        </div>
 
-    <form action="/regisztracio" method="POST">
-        <div>
-            <label for="nev">Név:</label>
-            <input type="text" id="nev" name="nev" required>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email cím</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="jelszo" class="form-label">Jelszó</label>
+                            <input type="password" class="form-control" id="jelszo" name="jelszo" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="jelszo2" class="form-label">Jelszó ismét</label>
+                            <input type="password" class="form-control" id="jelszo2" name="jelszo2" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            Regisztráció
+                        </button>
+
+                        <div class="text-center">
+                            <small class="text-muted">
+                                Már van fiókja?
+                                <a href="/bejelentkezes">Bejelentkezés</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="email">Email cím:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div>
-            <label for="jelszo">Jelszó:</label>
-            <input type="password" id="jelszo" name="jelszo" required>
-        </div>
-         <div>
-            <label for="jelszo_megerosit">Jelszó megerősítése:</label>
-            <input type="password" id="jelszo_megerosit" name="jelszo_megerosit" required>
-        </div>
-        <button type="submit">Regisztráció</button>
-    </form>
+    </div>
 </main>
 
 <%- include('../partials/footer') %>
