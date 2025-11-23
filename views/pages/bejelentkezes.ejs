@@ -10,7 +10,7 @@
                         Jelentkezzen be, hogy elérje az üzeneteket és az admin funkciókat.
                     </p>
 
-                    <form method="post" action="/bejelentkezes">
+                    <form method="post" action="<%= base_path %>/bejelentkezes">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email cím</label>
                             <input type="email" class="form-control" id="email" name="email" required>
@@ -28,7 +28,7 @@
                         <div class="text-center">
                             <small class="text-muted">
                                 Még nincs fiókja?
-                                <a href="/regisztracio">Regisztráció</a>
+                                <a href="<%= base_path %>/regisztracio">Regisztráció</a>
                             </small>
                         </div>
                     </form>

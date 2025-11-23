@@ -1,70 +1,115 @@
 <%- include('../../partials/header') %>
 
-<main>
-    <h1>Admin - Városok Kezelése (CRUD)</h1>
-    <p>Itt lehet új várost felvinni, meglévőket módosítani vagy törölni.</p>
+<main class="py-4">
 
-    <a href="/admin/varos/uj" style="background: green; color: white; padding: 10px; text-decoration: none; margin-bottom: 15px; display: inline-block;">
-        Új város hozzáadása
-    </a>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Admin – Városok kezelése (CRUD)</h1>
+            <p class="text-muted mb-0">
+                Itt lehet új várost felvinni, meglévőket módosítani vagy törölni.
+            </p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="<%= base_path %>/admin/varos/uj" class="btn btn-success">
+                Új város hozzáadása
+            </a>
+        </div>
+    </div>
 
-    <form action="/admin/varosok" method="GET" style="margin: 20px 0;">
-    <label for="megye">Megye neve:</label>
-    <select name="megye" id="admin-szuro-megye">
-        <option value="">-- Összes megye --</option>
-        <% megyeNevek.forEach(m => { %>
-            <option value="<%= m.nev %>"
-                <%= (typeof szures !== 'undefined' && szures.megye === m.nev) ? 'selected' : '' %>>
-                <%= m.nev %>
-            </option>
-        <% }) %>
-    </select>
+    <!-- Szűrő kártya -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form action="<%= base_path %>/admin/varosok" method="GET" class="row g-3 align-items-end">
 
-    <label for="varos">Város neve:</label>
-    <select name="varos" id="admin-szuro-varos">
-        <option value="">-- Összes város --</option>
-        <% varosNevek.forEach(v => { %>
-            <option value="<%= v.nev %>"
-                <%= (typeof szures !== 'undefined' && szures.varos === v.nev) ? 'selected' : '' %>>
-                <%= v.nev %>
-            </option>
-        <% }) %>
-    </select>
+                <div class="col-md-4">
+                    <label for="admin-szuro-megye" class="form-label">Megye neve</label>
+                    <select name="megye" id="admin-szuro-megye" class="form-select">
+                        <option value="">-- Összes megye --</option>
+                        <% megyeNevek.forEach(m => { %>
+                            <option value="<%= m.nev %>"
+                                <%= (typeof szures !== 'undefined' && szures.megye === m.nev) ? 'selected' : '' %>>
+                                <%= m.nev %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
 
-    <button type="submit">Szűrés</button>
-    <a href="/admin/varosok">Szűrés törlése</a>
-</form>
+                <div class="col-md-4">
+                    <label for="admin-szuro-varos" class="form-label">Város neve</label>
+                    <select name="varos" id="admin-szuro-varos" class="form-select">
+                        <option value="">-- Összes város --</option>
+                        <% varosNevek.forEach(v => { %>
+                            <option value="<%= v.nev %>"
+                                <%= (typeof szures !== 'undefined' && szures.varos === v.nev) ? 'selected' : '' %>>
+                                <%= v.nev %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
 
-    <table border="1" style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Város neve</th>
-                <th>Megye neve</th>
-                <th>Megyeszékhely?</th>
-                <th>Megyei jogú?</th>
-                <th>Műveletek</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% varosok.forEach(varos => { %>
-                <tr>
-                    <td><%= varos.id %></td>
-                    <td><%= varos.varosNev %></td>
-                    <td><%= varos.megyeNev %></td>
-                    <td><%= varos.megyeszekhely ? 'Igen' : 'Nem' %></td>
-                    <td><%= varos.megyeijogu ? 'Igen' : 'Nem' %></td>
-                    <td>
-                        <a href="/admin/varos/szerkeszt/<%= varos.id %>">Edit</a>
-                        <a href="/admin/varos/torles/<%= varos.id %>" 
-                           onclick="return confirm('Biztosan törli a(z) <%= varos.varosNev %> nevű várost? Ez a művelet nem vonható vissza!');">
-                           Delete
-                        </a>
-                    </td>
-                </tr>
-            <% }) %>
-        </tbody>
-    </table>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Szűrés</button>
+                    <a href="<%= base_path %>/admin/varosok" class="btn btn-outline-secondary">
+                        Szűrés törlése
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Városok táblázata -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <% if (!varosok || varosok.length === 0) { %>
+                <p class="m-3 text-muted">Nincs megjeleníthető város.</p>
+            <% } else { %>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Város neve</th>
+                                <th>Megye</th>
+                                <th class="text-center">Megyeszékhely?</th>
+                                <th class="text-center">Megyei jogú?</th>
+                                <th class="text-end">Műveletek</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% varosok.forEach(varos => { %>
+                                <tr>
+                                    <td><%= varos.id %></td>
+                                    <td><%= varos.varosNev %></td>
+                                    <td><%= varos.megyeNev %></td>
+                                    <td class="text-center">
+                                        <span class="badge <%= varos.megyeszekhely ? 'bg-success' : 'bg-secondary' %>">
+                                            <%= varos.megyeszekhely ? 'Igen' : 'Nem' %>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge <%= varos.megyeijogu ? 'bg-success' : 'bg-secondary' %>">
+                                            <%= varos.megyeijogu ? 'Igen' : 'Nem' %>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="<%= base_path %>/admin/varos/szerkeszt/<%= varos.id %>" class="btn btn-sm btn-outline-primary me-1">
+                                            Szerkesztés
+                                        </a>
+                                        <a href="<%= base_path %>/admin/varos/torles/<%= varos.id %>"
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Biztosan törli a(z) <%= varos.varosNev %> nevű várost? Ez a művelet nem vonható vissza!');">
+                                            Törlés
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
 </main>
 
 <script>
@@ -102,7 +147,7 @@
 
     async function adminUpdateVarosok(megyeNeve) {
         try {
-            const response = await fetch(`/api/varosok-by-megye?megye=${encodeURIComponent(megyeNeve)}`);
+            const response = await fetch(`<%= base_path %>/api/varosok-by-megye?megye=${encodeURIComponent(megyeNeve)}`);
             const varosok = await response.json();
             const jelenlegiVaros = adminVarosDropdown.value;
             adminVarosDropdown.innerHTML = '<option value="">-- Összes város --</option>'; 

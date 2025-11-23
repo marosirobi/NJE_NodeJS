@@ -10,7 +10,7 @@
                         Hozzon létre fiókot, hogy üzeneteket küldhessen és elérje a rendszer funkcióit.
                     </p>
 
-                    <form method="post" action="/regisztracio">
+                    <form method="post" action="<%= base_path %>/regisztracio">
                         <div class="mb-3">
                             <label for="nev" class="form-label">Név</label>
                             <input type="text" class="form-control" id="nev" name="nev" required>
@@ -38,7 +38,7 @@
                         <div class="text-center">
                             <small class="text-muted">
                                 Már van fiókja?
-                                <a href="/bejelentkezes">Bejelentkezés</a>
+                                <a href="<%= base_path %>/bejelentkezes">Bejelentkezés</a>
                             </small>
                         </div>
                     </form>

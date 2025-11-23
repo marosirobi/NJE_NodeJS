@@ -2,15 +2,21 @@ const express = require('express');
 const path = require('path');
 const db = require('./config/db');
 const app = express();
-const port = 3000;
 const session = require('express-session');
 const flash = require('connect-flash');
 const bcrypt = require('bcryptjs');
 
+require("dotenv").config();
+const basePath = process.env.BASE_PATH ?? "";
+app.locals.base_path = basePath;
+
+const port =  process.env.PORT ?? 3000;
+
 const isLoggedIn = (req, res, next) => {
     if (!req.session.user) {
         req.flash('error', 'Az oldal megtekintéséhez bejelentkezés szükséges!');
-        return res.redirect('/bejelentkezes');
+        const basePath = req.app.locals.basePath;
+        return res.redirect(basePath+'/bejelentkezes');
     }
     next(); // Ha be van jelentkezve, továbbengedjük
 };
@@ -19,12 +25,12 @@ const isAdmin = (req, res, next) => {
     // Először ellenőrizzük, be van-e lépve
     if (!req.session.user) {
         req.flash('error', 'Az oldal megtekintéséhez bejelentkezés szükséges!');
-        return res.redirect('/bejelentkezes');
+        return res.redirect(basePath+'/bejelentkezes');
     }
     // Utána ellenőrizzük, admin-e
     if (req.session.user.szerepkor !== 'admin') {
         req.flash('error', 'Nincs jogosultságod az oldal megtekintéséhez!');
-        return res.redirect('/');
+        return res.redirect(basePath+'/');
     }
     next(); // Ha be van lépve ÉS admin, továbbengedjük
 };
@@ -50,13 +56,13 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/', (req,res) =>{
+app.get(basePath+'/', (req,res) =>{
     res.render('pages/index', {
         title: "Főoldal"
     });
 });
 
-app.get('/uzenetek', isLoggedIn, async (req, res) => {
+app.get(basePath+'/uzenetek', isLoggedIn, async (req, res) => {
     try {
         // A bejelentkezett felhasználó adatai a session-ből
         const user = req.session.user; 
@@ -96,11 +102,11 @@ app.get('/uzenetek', isLoggedIn, async (req, res) => {
     } catch (error) {
         console.error('Hiba az üzenetek lekérdezése során:', error);
         req.flash('error', 'Hiba történt a szerveren.');
-        res.redirect('/');
+        res.redirect(basePath+'/');
     }
 });
 
-app.get('/admin/varosok', isAdmin, async (req, res) => {
+app.get(basePath+'/admin/varosok', isAdmin, async (req, res) => {
     try {
         // 1. MINDIG a teljes listát kérjük le
         const [varosNevek] = await db.query("SELECT DISTINCT nev FROM varos ORDER BY nev");
@@ -142,11 +148,11 @@ app.get('/admin/varosok', isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Hiba (Admin város lista):', error);
         req.flash('error', 'Hiba történt a szerveren.');
-        res.redirect('/');
+        res.redirect(basePath+'/');
     }
 });
 
-app.get('/admin/varos/uj', isAdmin, async (req, res) => {
+app.get(basePath+'/admin/varos/uj', isAdmin, async (req, res) => {
     try {
         // Be kell töltenünk a megyéket a dropdown menühöz
         const [megyek] = await db.query("SELECT * FROM megye ORDER BY nev");
@@ -158,11 +164,11 @@ app.get('/admin/varos/uj', isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Hiba (Új város GET):', error);
         req.flash('error', 'Hiba történt a szerveren.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
     }
 });
 
-app.post('/admin/varos/uj', isAdmin, async (req, res) => {
+app.post(basePath+'/admin/varos/uj', isAdmin, async (req, res) => {
     try {
         const { nev, megyeid, megyeszekhely, megyeijogu } = req.body;
 
@@ -176,16 +182,16 @@ app.post('/admin/varos/uj', isAdmin, async (req, res) => {
         await db.query(sqlQuery, [nev, megyeid, isMegyeszekhely, isMegyeijogu]);
 
         req.flash('success', 'A(z) ' + nev + ' nevű város sikeresen létrehozva.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
 
     } catch (error) {
         console.error('Hiba (Új város POST):', error);
         req.flash('error', 'Hiba történt a város létrehozása közben.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
     }
 });
 
-app.get('/admin/varos/torles/:id', isAdmin, async (req, res) => {
+app.get(basePath+'/admin/varos/torles/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -196,16 +202,16 @@ app.get('/admin/varos/torles/:id', isAdmin, async (req, res) => {
         await db.query("DELETE FROM varos WHERE id = ?", [id]);
 
         req.flash('success', 'A város és a hozzá tartozó lélekszám adatok sikeresen törölve.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
 
     } catch (error) {
         console.error('Hiba (Törlés GET):', error);
         req.flash('error', 'Hiba történt a város törlése közben.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
     }
 });
 
-app.get('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
+app.get(basePath+'/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params; // A város ID-je az URL-ből
 
@@ -217,7 +223,7 @@ app.get('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
 
         if (varosok.length === 0) {
             req.flash('error', 'A város nem található.');
-            return res.redirect('/admin/varosok');
+            return res.redirect(basePath+'/admin/varosok');
         }
 
         // 3. ÚJ: Lekérdezzük a városhoz tartozó ÖSSZES népességi adatot
@@ -235,11 +241,11 @@ app.get('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Hiba (Szerkesztés GET):', error);
         req.flash('error', 'Hiba történt a szerveren.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
     }
 });
 
-app.post('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
+app.post(basePath+'/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { nev, megyeid, megyeszekhely, megyeijogu } = req.body;
@@ -255,28 +261,28 @@ app.post('/admin/varos/szerkeszt/:id', isAdmin, async (req, res) => {
         await db.query(sqlQuery, [nev, megyeid, isMegyeszekhely, isMegyeijogu, id]);
 
         req.flash('success', 'A(z) ' + nev + ' nevű város sikeresen módosítva.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
 
     } catch (error) {
         console.error('Hiba (Szerkesztés POST):', error);
         req.flash('error', 'Hiba történt a város módosítása közben.');
-        res.redirect('/admin/varosok');
+        res.redirect(basePath+'/admin/varosok');
     }
 });
 
-app.get('/regisztracio', (req, res) => {
+app.get(basePath+'/regisztracio', (req, res) => {
     res.render('pages/regisztracio', {
         title: 'Regisztráció'
     });
 });
 
-app.post('/regisztracio', async (req, res) => {
+app.post(basePath+'/regisztracio', async (req, res) => {
     const { nev, email, jelszo, jelszo_megerosit } = req.body;
 
     // 1. Validálás
     if (jelszo !== jelszo_megerosit) {
         req.flash('error', 'A két jelszó nem egyezik!');
-        return res.redirect('/regisztracio');
+        return res.redirect(basePath+'/regisztracio');
     }
 
     try {
@@ -284,7 +290,7 @@ app.post('/regisztracio', async (req, res) => {
         const [letezoUser] = await db.query("SELECT * FROM felhasznalok WHERE email = ?", [email]);
         if (letezoUser.length > 0) {
             req.flash('error', 'Ez az email cím már foglalt!');
-            return res.redirect('/regisztracio');
+            return res.redirect(basePath+'/regisztracio');
         }
 
         // 3. Jelszó hashelése
@@ -297,22 +303,22 @@ app.post('/regisztracio', async (req, res) => {
 
         // 5. Sikeres regisztráció
         req.flash('success', 'Sikeres regisztráció! Most már bejelentkezhetsz.');
-        res.redirect('/bejelentkezes');
+        res.redirect(basePath+'/bejelentkezes');
 
     } catch (error) {
         console.error('Hiba a regisztráció során:', error);
         req.flash('error', 'Hiba történt a szerveren.');
-        res.redirect('/regisztracio');
+        res.redirect(basePath+'/regisztracio');
     }
 });
 
-app.get('/bejelentkezes', (req, res) => {
+app.get(basePath+'/bejelentkezes', (req, res) => {
     res.render('pages/bejelentkezes', {
         title: 'Bejelentkezés'
     });
 });
 
-app.post('/bejelentkezes', async (req, res) => {
+app.post(basePath+'/bejelentkezes', async (req, res) => {
     const { email, jelszo } = req.body;
 
     try {
@@ -321,7 +327,7 @@ app.post('/bejelentkezes', async (req, res) => {
 
         if (users.length === 0) {
             req.flash('error', 'Hibás email cím vagy jelszó!');
-            return res.redirect('/bejelentkezes');
+            return res.redirect(basePath+'/bejelentkezes');
         }
 
         const user = users[0];
@@ -331,7 +337,7 @@ app.post('/bejelentkezes', async (req, res) => {
 
         if (!jelszoEgyezik) {
             req.flash('error', 'Hibás email cím vagy jelszó!');
-            return res.redirect('/bejelentkezes');
+            return res.redirect(basePath+'/bejelentkezes');
         }
 
         // 3. Sikeres bejelentkezés -> Session beállítása
@@ -344,40 +350,40 @@ app.post('/bejelentkezes', async (req, res) => {
         };
 
         // 4. Átirányítás a főoldalra
-        res.redirect('/');
+        res.redirect(basePath+'/');
 
     } catch (error) {
         console.error('Hiba a bejelentkezés során:', error);
         req.flash('error', 'Hiba történt a szerveren.');
-        res.redirect('/bejelentkezes');
+        res.redirect(basePath+'/bejelentkezes');
     }
 });
 
-app.get('/kijelentkezes', (req, res) => {
+app.get(basePath+'/kijelentkezes', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            return res.redirect('/');
+            return res.redirect(basePath+'/');
         }
         res.clearCookie('connect.sid'); // Törli a session sütit
-        res.redirect('/');
+        res.redirect(basePath+'/');
     });
 });
 
-app.get('/kapcsolat', (req, res) => {
+app.get(basePath+'/kapcsolat', (req, res) => {
     res.render('pages/kapcsolat', {
         title: 'Kapcsolat'
     });
 });
 
 
-app.post('/kapcsolat', async (req, res) => {
+app.post(basePath+'/kapcsolat', async (req, res) => {
     const { nev, email, uzenet } = req.body;
 
     try {
         const sqlQuery = "INSERT INTO uzenetek (nev, email, uzenet) VALUES (?, ?, ?)";
         await db.query(sqlQuery, [nev, email, uzenet]);
 
-        res.redirect('/');
+        res.redirect(basePath+'/');
 
     } catch (error) {
         console.error('Hiba az üzenet mentése során:', error);
@@ -386,7 +392,7 @@ app.post('/kapcsolat', async (req, res) => {
 });
 
 
-app.get('/adatbazis-lista', async (req, res) => {
+app.get(basePath+'/adatbazis-lista', async (req, res) => {
     try {
         // 1. Listák lekérdezése a legördülő menükhöz
         const [varosNevek] = await db.query("SELECT DISTINCT nev FROM varos ORDER BY nev");
@@ -453,7 +459,7 @@ app.get('/adatbazis-lista', async (req, res) => {
 });
 
 
-app.get('/api/varosok-by-megye', async (req, res) => {
+app.get(basePath+'/api/varosok-by-megye', async (req, res) => {
     try {
         const { megye } = req.query;
         let sqlQuery = "";
@@ -478,7 +484,7 @@ app.get('/api/varosok-by-megye', async (req, res) => {
 });
 
 // 2. API: Megye lekérdezése városnév alapján
-app.get('/api/megye-by-varos', async (req, res) => {
+app.get(basePath+'/api/megye-by-varos', async (req, res) => {
     try {
         const { varos } = req.query;
         if (!varos || varos === "") {
@@ -501,7 +507,7 @@ app.get('/api/megye-by-varos', async (req, res) => {
     }
 });
 
-app.post('/admin/lelekszam/uj', isAdmin, async (req, res) => {
+app.post(basePath+'/admin/lelekszam/uj', isAdmin, async (req, res) => {
     // A rejtett mezőből kapjuk a varosid-t
     const { varosid, ev, osszesen, no } = req.body;
     try {
@@ -519,10 +525,10 @@ app.post('/admin/lelekszam/uj', isAdmin, async (req, res) => {
         }
     }
     // Visszairányítjuk az eredeti szerkesztő oldalra
-    res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+    res.redirect(basePath+`/admin/varos/szerkeszt/${varosid}`);
 });
 
-app.get('/admin/lelekszam/torles/:varosid/:ev', isAdmin, async (req, res) => {
+app.get(basePath+'/admin/lelekszam/torles/:varosid/:ev', isAdmin, async (req, res) => {
     const { varosid, ev } = req.params;
     try {
         await db.query("DELETE FROM lelekszam WHERE varosid = ? AND ev = ?", [varosid, ev]);
@@ -532,10 +538,10 @@ app.get('/admin/lelekszam/torles/:varosid/:ev', isAdmin, async (req, res) => {
         req.flash('error', 'Hiba történt az adat törlése közben.');
     }
     // Visszairányítás a fő szerkesztő oldalra
-    res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+    res.redirect(basePath+`/admin/varos/szerkeszt/${varosid}`);
 });
 
-app.get('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => {
+app.get(basePath+'/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => {
     try {
         const { varosid, ev } = req.params;
 
@@ -550,7 +556,7 @@ app.get('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => 
 
         if (rows.length === 0) {
             req.flash('error', 'A keresett népességi adat nem található.');
-            return res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+            return res.redirect(basePath+`/admin/varos/szerkeszt/${varosid}`);
         }
 
         res.render('pages/admin/lelekszam-szerkeszt', {
@@ -561,11 +567,11 @@ app.get('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => 
     } catch (error) {
         console.error('Hiba (Lélekszám szerkesztés GET):', error);
         req.flash('error', 'Szerverhiba történt.');
-        res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+        res.redirect(basePath+`/admin/varos/szerkeszt/${varosid}`);
     }
 });
 
-app.post('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => {
+app.post(basePath+'/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) => {
     const { varosid, ev } = req.params;
     const { osszesen, no } = req.body; // Az űrlapból jövő új adatok
 
@@ -579,7 +585,7 @@ app.post('/admin/lelekszam/szerkeszt/:varosid/:ev', isAdmin, async (req, res) =>
         req.flash('error', 'Hiba történt az adat módosítása közben.');
     }
     // Visszairányítjuk a fő szerkesztő oldalra
-    res.redirect(`/admin/varos/szerkeszt/${varosid}`);
+    res.redirect(basePath+`/admin/varos/szerkeszt/${varosid}`);
 });
 
 app.listen(port, () =>{
